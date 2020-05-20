@@ -4,64 +4,6 @@ out1 <- readRDS('out1.rds')
 out2 <- readRDS('out2.rds')
 out3 <- readRDS('out3.rds')
 out4 <- readRDS('out4.rds')
-## Need another function to quickly identify the optimal weights
-## The input should be a vector (of DIC)
-## Type = 1 is for extra-household transmission > household transmission
-## Type = 0 is for household transmission > extra-household transmission
-## This version is for knowing the direction
-opweight <- function(dic,type){
-  if (type == 1){
-    s <- min(dic[1:5])
-    k <- which(dic==s)
-    ind <- which(dic<(s+4.5))
-    final = ind[ind<6&ind>=k]
-  } else if (type == 0) {
-    s <- min(dic[6:10])
-    k <- which(dic==s)
-    ind <- which(dic<(s+4.5))
-    final = ind[ind>5&ind<=k]
-  }
-  return(final)
-}
-
-out1 <- out1[,-6]
-out2 <- out2[,-6]
-out3 <- out3[,-6]
-out4 <- out4[,-6]
-bw1 <- apply(out1,1,opweight,type = 1) ## This should be the choice of weights based on DIC
-bw2 <- apply(out2,1,opweight,type = 1)
-bw3 <- apply(out3,1,opweight,type = 0)
-bw4 <- apply(out4,1,opweight,type = 0)
-
-
-## Get the estimates based on optimal weighting scheme
-west <- function(sce_no,data,w){
-  n <- length(w)
-  file <- paste0("s",sce_no,"_est_",data,".rds")
-  est <- readRDS(file)
-  for (i in 1:n){
-    if (i == 1){
-      output <- est[[w[i]]]
-    } else {
-      output <- rbind(output,est[[w[i]]])
-    }
-  }
-  out <- apply(output,2,function(x) quantile(x,probs = c(0.025,0.5,0.975)))
-  return(out)
-}
-
-west(1,1,bw1[[1]])
-
-## wrap it up
-wci <- function(sce_no,w){
-  output <- vector("list",25)
-  for (i in 1:25){
-    output[[i]] <- west(sce_no,i,w[[i]])
-  }
-  return(output)
-}
-wci<- compiler::cmpfun(wci)
-wci(1,bw1)
 
 ## DIC plot
 par(mfrow=c(2,2))
@@ -269,7 +211,6 @@ ggplot(data = d)+geom_linerange(mapping = aes(x=parameter,ymin=lb,ymax=ub))+
 ## Brazil Data Example ##
 #########################
 library(tidyverse)
-library(wselect)
 data <- read_csv("mydat.csv")
 data[904,]$adult=1
 data <- data%>%group_by(hhid)%>%mutate(lag = as.numeric((date-min(date,na.rm=TRUE))/365))
