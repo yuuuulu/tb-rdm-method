@@ -1,6 +1,6 @@
 rbinom <- Vectorize(rbinom,c("prob")) ## Vectorize the rbinom function for tb simulation
 
-## hhsim function is the function for simulating tb transmission for each household
+## hhsim function is the function for simulating tb transmission for each household-
 ## Parameter explanations: 
 ## data: the simulated data for each household
 ## tpar: parameter values for the transmission model
